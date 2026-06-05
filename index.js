@@ -15,9 +15,14 @@ app.get(['/login', '/login/'], (req, res) => {
 
 app.get(['/id/:n', '/id/:n/'], (req, res) => {
   const n = req.params.n;
-  const url = `https://nd.kodaktor.ru/users/${n}`;
+  const options = {
+    hostname: 'nd.kodaktor.ru',
+    path: `/users/${n}`,
+    method: 'GET',
+    headers: {}
+  };
 
-  https.get(url, response => {
+  https.get(options, response => {
     let data = '';
 
     response.on('data', chunk => {
@@ -26,9 +31,10 @@ app.get(['/id/:n', '/id/:n/'], (req, res) => {
 
     response.on('end', () => {
       try {
-        const json = JSON.parse(data);
+        const parsed = JSON.parse(data);
+        const login = parsed.login || parsed.user?.login || parsed.data?.login || '';
         res.type('text/plain');
-        res.send(json.login);
+        res.send(login);
       } catch {
         res.type('text/plain');
         res.send('');
