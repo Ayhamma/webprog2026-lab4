@@ -15,14 +15,15 @@ app.get(['/login', '/login/'], (req, res) => {
 
 app.get(['/id/:n', '/id/:n/'], (req, res) => {
   const n = req.params.n;
+
   const options = {
     hostname: 'nd.kodaktor.ru',
     path: `/users/${n}`,
     method: 'GET',
-    headers: {}
+    rejectUnauthorized: false
   };
 
-  https.get(options, response => {
+  const request = https.request(options, response => {
     let data = '';
 
     response.on('data', chunk => {
@@ -31,19 +32,22 @@ app.get(['/id/:n', '/id/:n/'], (req, res) => {
 
     response.on('end', () => {
       try {
-        const parsed = JSON.parse(data);
-        const login = parsed.login || parsed.user?.login || parsed.data?.login || '';
+        const user = JSON.parse(data);
         res.type('text/plain');
-        res.send(login);
+        res.send(user.login || '');
       } catch {
         res.type('text/plain');
         res.send('');
       }
     });
-  }).on('error', () => {
+  });
+
+  request.on('error', () => {
     res.type('text/plain');
     res.send('');
   });
+
+  request.end();
 });
 
 app.all('*', (req, res) => {
